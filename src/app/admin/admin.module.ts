@@ -8,6 +8,7 @@ import { CategoriaComponent } from './inventario/components/categoria/categoria.
 import { ClienteComponent } from './components/cliente/cliente.component';
 import { ListaPedidoComponent } from './pedido/components/lista-pedido/lista-pedido.component';
 import { NuevoPedidoComponent } from './pedido/components/nuevo-pedido/nuevo-pedido.component';
+import { LayoutComponent } from './layout/layout.component';
 
 
 @NgModule({
@@ -17,7 +18,8 @@ import { NuevoPedidoComponent } from './pedido/components/nuevo-pedido/nuevo-ped
     CategoriaComponent,
     ClienteComponent,
     ListaPedidoComponent,
-    NuevoPedidoComponent
+    NuevoPedidoComponent,
+    LayoutComponent
   ],
   imports: [
     CommonModule,
