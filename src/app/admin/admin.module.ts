@@ -9,7 +9,7 @@ import { ClienteComponent } from './components/cliente/cliente.component';
 import { ListaPedidoComponent } from './pedido/components/lista-pedido/lista-pedido.component';
 import { NuevoPedidoComponent } from './pedido/components/nuevo-pedido/nuevo-pedido.component';
 import { LayoutComponent } from './layout/layout.component';
-
+import { AppLayoutModule } from './layout/app.layout.module';
 
 @NgModule({
   declarations: [
@@ -23,7 +23,8 @@ import { LayoutComponent } from './layout/layout.component';
   ],
   imports: [
     CommonModule,
-    AdminRoutingModule
+    AdminRoutingModule,
+    AppLayoutModule
   ]
 })
 export class AdminModule { }

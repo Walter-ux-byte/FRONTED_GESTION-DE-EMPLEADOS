@@ -1,6 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, inject } from '@angular/core';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -9,23 +11,24 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LoginComponent {
 
-  private authService = inject(AuthService);
+  private authService = inject(AuthService)
+  private router = inject(Router)
 
   loginForm = new FormGroup({
     email: new FormControl("", [Validators.email, Validators.required]),
     password: new FormControl("", Validators.required)
-  });
+  })
 
-  funIngresar() {
+  funIngresar(){
     this.authService.loginConNest(this.loginForm.value).subscribe(
-      (res) => {
-        console.log(res);
+      (res)=>{
+        console.log(res)
+        this.router.navigate(["/admin"])
       },
-      (error) => {
-        console.log(error);
+      (error)=>{
+        console.log(error)
       }
-    );
-
-    // alert("Ingresando...")
+    )
   }
+  //alert("Ingresando...")
 }
