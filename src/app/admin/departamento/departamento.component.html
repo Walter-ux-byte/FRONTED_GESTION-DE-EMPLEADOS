@@ -1,0 +1,30 @@
+<div class="card">
+    <h1>Categoría</h1>
+
+    @if (error) {
+        <p role="alert">{{ error }}</p>
+    } @else {
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>NOMBRE</th>
+                    <th>UBICACIÓN</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (departamento of departamentos; track departamento.id) {
+                    <tr>
+                        <td>{{ departamento.id }}</td>
+                        <td>{{ departamento.nombreDepartamento }}</td>
+                        <td>{{ departamento.ubicacion ?? '-' }}</td>
+                    </tr>
+                } @empty {
+                    <tr>
+                        <td colspan="3">No hay categorías registradas.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

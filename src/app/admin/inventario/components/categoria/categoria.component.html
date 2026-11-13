@@ -1,1 +1,123 @@
-<p>categoria works!</p>
+<div class="card">
+
+    <h1>Categoría</h1>
+
+    
+    <p-button
+        label="Nueva Categoría"
+        icon="pi pi-plus"
+        (click)="mostrarDialog()">
+    </p-button>
+
+  
+    <p-table
+        [value]="categorias"
+        [tableStyle]="{ 'min-width': '50rem' }">
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>NOMBRE</th>
+                <th>DETALLE</th>
+                <th>ACCIÓN</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-cat>
+            <tr>
+                <td>{{ cat.id }}</td>
+                <td>{{ cat.nombre }}</td>
+                <td>{{ cat.detalle }}</td>
+                <td></td>
+            </tr>
+        </ng-template>
+
+    </p-table>
+
+    <ul>
+        @for (cat of categorias; track $index) {
+            <li>{{ cat.nombre }} - {{ cat.detalle }}</li>
+        }
+    </ul>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>NOMBRE</th>
+                <th>DETALLE</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (cat of categorias; track $index) {
+                <tr>
+                    <td>{{ cat.id }}</td>
+                    <td>{{ cat.nombre }}</td>
+                    <td>{{ cat.detalle }}</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <p-dialog
+        header="Nueva Categoría"
+        [(visible)]="dialog_visible"
+        [modal]="true"
+        [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
+        [style]="{ width: '50vw' }"
+        [draggable]="false"
+        [resizable]="false">
+
+        <form [formGroup]="categoriaForm" class="p-fluid">
+
+            
+            <div class="field">
+                <label for="nombre">Nombre</label>
+                <input
+                    type="text"
+                    pInputText
+                    id="nombre"
+                    formControlName="nombre"
+                    autofocus
+                    placeholder="Ingrese el nombre"/>
+            </div>
+
+            
+            <div class="field">
+                <label for="detalle">Detalle</label>
+                <input
+                    type="text"
+                    pInputText
+                    id="detalle"
+                    formControlName="detalle"
+                    placeholder="Ingrese el detalle"/>
+            </div>
+
+        </form>
+
+      
+        <ng-template pTemplate="footer">
+
+            <button
+                pButton
+                pRipple
+                label="Cancelar"
+                icon="pi pi-times"
+                class="p-button-text"
+                (click)="hideDialog()">
+            </button>
+
+            <button
+                pButton
+                pRipple
+                label="Guardar"
+                icon="pi pi-check"
+                class="p-button-text"
+                (click)="saveCategoria()">
+            </button>
+
+        </ng-template>
+
+    </p-dialog>
+
+</div>
