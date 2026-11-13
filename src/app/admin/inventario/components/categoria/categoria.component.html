@@ -2,14 +2,12 @@
 
     <h1>Categoría</h1>
 
-    
     <p-button
         label="Nueva Categoría"
         icon="pi pi-plus"
         (click)="mostrarDialog()">
     </p-button>
 
-  
     <p-table
         [value]="categorias"
         [tableStyle]="{ 'min-width': '50rem' }">
@@ -28,39 +26,19 @@
                 <td>{{ cat.id }}</td>
                 <td>{{ cat.nombre }}</td>
                 <td>{{ cat.detalle }}</td>
-                <td></td>
+                <td>
+                    <div class="flex">
+                        <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="editCategoria(cat)"></button>
+                        <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-warning" (click)="deleteCategoria(cat)"></button>
+                    </div>
+                </td>
             </tr>
         </ng-template>
 
     </p-table>
 
-    <ul>
-        @for (cat of categorias; track $index) {
-            <li>{{ cat.nombre }} - {{ cat.detalle }}</li>
-        }
-    </ul>
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>NOMBRE</th>
-                <th>DETALLE</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for (cat of categorias; track $index) {
-                <tr>
-                    <td>{{ cat.id }}</td>
-                    <td>{{ cat.nombre }}</td>
-                    <td>{{ cat.detalle }}</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
     <p-dialog
-        header="Nueva Categoría"
+        [header]="categoria_id > 0 ? 'Editar Categoría' : 'Nueva Categoría'"
         [(visible)]="dialog_visible"
         [modal]="true"
         [breakpoints]="{ '1199px': '75vw', '575px': '90vw' }"
@@ -70,7 +48,6 @@
 
         <form [formGroup]="categoriaForm" class="p-fluid">
 
-            
             <div class="field">
                 <label for="nombre">Nombre</label>
                 <input
@@ -80,9 +57,11 @@
                     formControlName="nombre"
                     autofocus
                     placeholder="Ingrese el nombre"/>
+                @if (categoriaForm.get('nombre')?.invalid && categoriaForm.get('nombre')?.touched) {
+                    <small class="p-error">El campo nombre es obligatorio.</small>
+                }
             </div>
 
-            
             <div class="field">
                 <label for="detalle">Detalle</label>
                 <input
@@ -95,7 +74,6 @@
 
         </form>
 
-      
         <ng-template pTemplate="footer">
 
             <button
@@ -113,7 +91,7 @@
                 label="Guardar"
                 icon="pi pi-check"
                 class="p-button-text"
-                (click)="saveCategoria()">
+                (click)="guardarCategoria()">
             </button>
 
         </ng-template>

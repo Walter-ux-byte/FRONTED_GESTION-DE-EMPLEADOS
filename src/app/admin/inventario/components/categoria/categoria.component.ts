@@ -19,6 +19,7 @@ export class CategoriaComponent implements OnInit {
 
   categorias: Categoria[] = [];
   dialog_visible: boolean = false;
+  categoria_id: number = -1;
 
   categoriaForm = new FormGroup({
     nombre: new FormControl('', Validators.required),
@@ -26,46 +27,81 @@ export class CategoriaComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.cargarCategorias();
+    this.getCategorias();
   }
 
-  cargarCategorias(): void {
+  getCategorias(): void {
     this.categoriaService.funListar().subscribe({
       next: (data: any) => {
         this.categorias = data;
       },
       error: (error: any) => {
-        console.error('Error al listar categorías:', error);
+        console.log(error);
       }
     });
   }
 
   mostrarDialog(): void {
+    this.categoria_id = -1;
     this.categoriaForm.reset();
     this.dialog_visible = true;
   }
 
   hideDialog(): void {
     this.dialog_visible = false;
+    this.categoria_id = -1;
   }
 
-  saveCategoria(): void {
+  editCategoria(cat: Categoria): void {
+    this.categoria_id = cat.id ?? -1;
+    this.categoriaForm.setValue({
+      nombre: cat.nombre,
+      detalle: cat.detalle ?? ''
+    });
+    this.dialog_visible = true;
+  }
+
+  deleteCategoria(cat: Categoria): void {
+    if (!cat.id) return;
+
+    this.categoriaService.funEliminar(cat.id).subscribe({
+      next: () => {
+        this.getCategorias();
+      },
+      error: (error: any) => {
+        console.log(error);
+      }
+    });
+  }
+
+  guardarCategoria(): void {
     if (this.categoriaForm.invalid) {
       this.categoriaForm.markAllAsTouched();
       return;
     }
 
-    const nuevaCategoria = this.categoriaForm.value;
-
-    this.categoriaService.funGuardar(nuevaCategoria).subscribe({
-      next: () => {
-        this.dialog_visible = false;
-        this.categoriaForm.reset();
-        this.cargarCategorias();
-      },
-      error: (error: any) => {
-        console.error('Error al guardar categoría:', error);
-      }
-    });
+    if (this.categoria_id > 0) {
+      this.categoriaService.funModificar(this.categoria_id, this.categoriaForm.value).subscribe(
+        (res: any) => {
+          this.dialog_visible = false;
+          this.getCategorias();
+          this.categoria_id = -1;
+        },
+        (error: any) => {
+          console.log(error);
+        }
+      );
+    } else {
+      this.categoriaService.funGuardar(this.categoriaForm.value).subscribe(
+        (res: any) => {
+          this.dialog_visible = false;
+          this.getCategorias();
+        },
+        (error: any) => {
+          console.log(error);
+        }
+      );
+    }
+    this.categoriaForm.reset();
   }
 }
