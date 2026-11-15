@@ -1,1 +1,197 @@
-<p>producto works!</p>
+<div class="card">
+
+    <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center mb-3">
+        <h2 class="m-0 text-900 font-bold">Gestión de Empleados</h2>
+    </div>
+
+    <!-- Toolbar estilo Sakai NG -->
+    <p-toolbar styleClass="mb-4 gap-2">
+        <ng-template pTemplate="left">
+            <button
+                pButton
+                pRipple
+                label="Nuevo Empleado"
+                icon="pi pi-plus"
+                class="p-button-success mr-2"
+                (click)="openNew()">
+            </button>
+        </ng-template>
+
+        <ng-template pTemplate="right">
+            <button
+                pButton
+                pRipple
+                label="Exportar CSV"
+                icon="pi pi-upload"
+                class="p-button-help"
+                (click)="dt.exportCSV()">
+            </button>
+        </ng-template>
+    </p-toolbar>
+
+    <!-- Tabla de Empleados con Paginador y Filtro Global -->
+    <p-table
+        #dt
+        [value]="empleados"
+        [rows]="10"
+        [paginator]="true"
+        [globalFilterFields]="['id', 'nombres', 'apellidos', 'user.mail']"
+        [tableStyle]="{ 'min-width': '60rem' }"
+        [rowHover]="true"
+        dataKey="id"
+        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} empleados"
+        [showCurrentPageReport]="true"
+        [rowsPerPageOptions]="[5, 10, 20]">
+
+        <ng-template pTemplate="caption">
+            <div class="flex flex-column md:flex-row md:justify-content-between md:align-items-center">
+                <span class="text-xl text-700 font-semibold">Listado del Personal</span>
+                <span class="block mt-2 md:mt-0 p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input
+                        pInputText
+                        type="text"
+                        (input)="onGlobalFilter(dt, $event)"
+                        placeholder="Buscar empleado..."
+                        class="w-full sm:w-auto" />
+                </span>
+            </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id" style="width: 8%">ID <p-sortIcon field="id"></p-sortIcon></th>
+                <th style="width: 12%">Imagen</th>
+                <th pSortableColumn="nombres" style="width: 20%">Nombres <p-sortIcon field="nombres"></p-sortIcon></th>
+                <th pSortableColumn="apellidos" style="width: 20%">Apellidos <p-sortIcon field="apellidos"></p-sortIcon></th>
+                <th style="width: 25%">Correo Electrónico</th>
+                <th style="width: 15%; text-align: center;">Acciones</th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-empleado>
+            <tr>
+                <td>{{ empleado.id }}</td>
+                <td>
+                    <img
+                        [src]="getImagenUrl(empleado)"
+                        [alt]="'Imagen de ' + empleado.nombres"
+                        width="48"
+                        height="48"
+                        class="border-circle object-cover" />
+                </td>
+                <td>{{ empleado.nombres }}</td>
+                <td>{{ empleado.apellidos }}</td>
+                <td>{{ getCorreo(empleado) }}</td>
+                <td style="text-align: center;">
+                    <div class="flex justify-content-center gap-2">
+                        <button
+                            pButton
+                            pRipple
+                            icon="pi pi-pencil"
+                            class="p-button-rounded p-button-success"
+                            pTooltip="Editar empleado"
+                            tooltipPosition="top"
+                            (click)="editEmpleado(empleado)">
+                        </button>
+                        <button
+                            pButton
+                            pRipple
+                            icon="pi pi-trash"
+                            class="p-button-rounded p-button-warning"
+                            pTooltip="Eliminar empleado"
+                            tooltipPosition="top"
+                            (click)="deleteEmpleado(empleado)">
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="6" class="text-center p-4">
+                    <i class="pi pi-info-circle mr-2 text-primary"></i>
+                    No se encontraron empleados registrados.
+                </td>
+            </tr>
+        </ng-template>
+
+    </p-table>
+
+    <!-- Diálogo Modal para Crear / Editar Empleado -->
+    <p-dialog
+        [(visible)]="empleadoDialog"
+        [style]="{ width: '450px' }"
+        [header]="empleado_id > 0 ? 'Editar Empleado' : 'Nuevo Empleado'"
+        [modal]="true"
+        [draggable]="false"
+        [resizable]="false"
+        class="p-fluid">
+
+        <form [formGroup]="empleadoForm" class="p-fluid pt-3">
+
+            <div class="field mb-3">
+                <label for="nombres" class="font-bold">Nombres *</label>
+                <input
+                    type="text"
+                    pInputText
+                    id="nombres"
+                    formControlName="nombres"
+                    placeholder="Ingrese los nombres"
+                    autofocus />
+                @if (empleadoForm.get('nombres')?.invalid && empleadoForm.get('nombres')?.touched) {
+                    <small class="p-error">El campo nombres es obligatorio (mínimo 2 caracteres).</small>
+                }
+            </div>
+
+            <div class="field mb-3">
+                <label for="apellidos" class="font-bold">Apellidos *</label>
+                <input
+                    type="text"
+                    pInputText
+                    id="apellidos"
+                    formControlName="apellidos"
+                    placeholder="Ingrese los apellidos" />
+                @if (empleadoForm.get('apellidos')?.invalid && empleadoForm.get('apellidos')?.touched) {
+                    <small class="p-error">El campo apellidos es obligatorio (mínimo 2 caracteres).</small>
+                }
+            </div>
+
+            <div class="field mb-3">
+                <label for="mail" class="font-bold">Correo electrónico *</label>
+                <input
+                    type="email"
+                    pInputText
+                    id="mail"
+                    formControlName="mail"
+                    placeholder="Ingrese el correo electrónico" />
+                @if (empleadoForm.get('mail')?.invalid && empleadoForm.get('mail')?.touched) {
+                    <small class="p-error">Ingrese un correo electrónico válido.</small>
+                }
+            </div>
+
+        </form>
+
+        <ng-template pTemplate="footer">
+            <button
+                pButton
+                pRipple
+                label="Cancelar"
+                icon="pi pi-times"
+                class="p-button-text"
+                (click)="hideDialog()">
+            </button>
+            <button
+                pButton
+                pRipple
+                label="Guardar"
+                icon="pi pi-check"
+                class="p-button-text"
+                (click)="guardarEmpleado()">
+            </button>
+        </ng-template>
+
+    </p-dialog>
+
+</div>

@@ -1,10 +1,10 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PerfilComponent } from './components/perfil/perfil.component';
-import { LayoutComponent } from './layout/layout.component';
 import { AppLayoutComponent } from './layout/app.layout.component';
 import { DepartamentoComponent } from './departamento/departamento.component';
 import { CategoriaComponent } from './inventario/components/categoria/categoria.component';
+import { ProductoComponent } from './inventario/components/producto/producto.component';
 
 const routes: Routes = [
   {
@@ -22,6 +22,20 @@ const routes: Routes = [
       {
         path: "departamento",
         component: DepartamentoComponent
+      },
+      {
+        path: "empleado",
+        component: ProductoComponent
+      },
+      {
+        path: "producto",
+        redirectTo: "empleado",
+        pathMatch: "full"
+      },
+      {
+        path: "persona",
+        redirectTo: "empleado",
+        pathMatch: "full"
       }
     ]
   }
