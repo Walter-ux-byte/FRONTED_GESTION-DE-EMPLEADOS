@@ -1,39 +1,17 @@
-
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { AuthRoutingModule } from './auth-routing.module';
+import { RouterModule } from '@angular/router';
 import { LoginComponent } from './components/login/login.component';
-import { RegisterComponent } from './components/register/register.component';
-import { ReactiveFormsModule, FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
-import { AuthService } from './services/auth.service';
-
-import { CheckboxModule } from 'primeng/checkbox';
-import { PasswordModule } from 'primeng/password';
-import { InputTextModule } from 'primeng/inputtext';
-import { ButtonModule } from 'primeng/button';
-import { RippleModule } from 'primeng/ripple';
+import { PrimengModule } from '../primeng/primeng.module';
 
 @NgModule({
-  providers: [
-    AuthService
-  ],
   declarations: [
-    LoginComponent,
-    RegisterComponent
+    LoginComponent
   ],
   imports: [
     CommonModule,
-    AuthRoutingModule,
-    ReactiveFormsModule,
-    FormsModule,
-    HttpClientModule,
-    CheckboxModule,
-    PasswordModule,
-    InputTextModule,
-    ButtonModule,
-    RippleModule
+    RouterModule,
+    PrimengModule
   ]
 })
 export class AuthModule { }

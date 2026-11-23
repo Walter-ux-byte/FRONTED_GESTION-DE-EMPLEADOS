@@ -12,7 +12,7 @@ import { CategoriaService } from './inventario/services/categoria.service';
 import { DepartamentoComponent } from './departamento/departamento.component';
 import { TableModule } from 'primeng/table';
 import { InventarioModule } from './inventario/inventario.module';
-
+import { ProductoService } from './inventario/services/producto.service';
 
 @NgModule({
   declarations: [
@@ -31,7 +31,8 @@ import { InventarioModule } from './inventario/inventario.module';
     InventarioModule
   ],
   providers: [
-    CategoriaService
+    CategoriaService,
+    ProductoService
   ]
 })
 export class AdminModule { }

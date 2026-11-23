@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
 import { Table } from 'primeng/table';
 import Swal, { SweetAlertIcon } from 'sweetalert2';
-import { Persona, PersonaService } from '../../services/persona.service';
+import { Producto, ProductoService } from '../../services/producto.service';
 
 @Component({
   selector: 'app-producto',
@@ -13,39 +13,63 @@ export class ProductoComponent implements OnInit {
 
   @ViewChild('dt') dt!: Table;
 
-  private readonly personaService = inject(PersonaService);
-
-  empleados: Persona[] = [];
-  empleadoDialog: boolean = false;
-  empleado_id: number = -1;
-
-  private readonly fotosEmpleados = [
-    'assets/layout/images/employee-portrait-1.svg',
-    'assets/layout/images/employee-portrait-2.svg',
-    'assets/layout/images/employee-portrait-3.svg',
-    'assets/layout/images/employee-portrait-4.svg'
+  categorias: any[] = [
+    { id: 1, name: 'Equipos de Cómputo', code: 'EC' },
+    { id: 2, name: 'Mobiliario de Oficina', code: 'MO' },
+    { id: 3, name: 'Uniformes y Dotación', code: 'UD' },
+    { id: 4, name: 'Periféricos y Accesorios', code: 'PA' },
+    { id: 5, name: 'Suministros de Oficina', code: 'SO' }
   ];
 
-  empleadoForm = new FormGroup({
-    nombres: new FormControl('', [Validators.required, Validators.minLength(2)]),
-    apellidos: new FormControl('', [Validators.required, Validators.minLength(2)]),
-    mail: new FormControl('', [Validators.required, Validators.email])
+  categoriaSeleccionada: any = null;
+
+  productos: Producto[] = [];
+  productoDialog: boolean = false;
+  producto_id: number = -1;
+
+  private readonly imagenesDefault = [
+    'assets/layout/images/product-placeholder-1.svg',
+    'assets/layout/images/product-placeholder-2.svg'
+  ];
+
+  productoForm = new FormGroup({
+    nombre: new FormControl('', [Validators.required, Validators.minLength(2)]),
+    precio: new FormControl<number | null>(null, [Validators.required, Validators.min(0.01)]),
+    stock: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
+    categoriaId: new FormControl<number | null>(null, [Validators.required]),
+    descripcion: new FormControl(''),
+    image: new FormControl(''),
+    estado: new FormControl(true)
   });
 
+  constructor(private productoService: ProductoService) {
+    this.productoService.funListar2().subscribe(
+      (res: any) => {
+        this.productos = Array.isArray(res) ? res : (res?.data ?? []);
+      }
+    );
+  }
+
   ngOnInit(): void {
-    this.getEmpleados();
+    this.getProductos();
   }
 
-  getImagenUrl(empleado: Persona): string {
-    const index = Math.abs(empleado.id ?? 0) % this.fotosEmpleados.length;
-    return this.fotosEmpleados[index];
+  getImagenUrl(producto: Producto): string {
+    if (producto.image && producto.image.trim() !== '') {
+      return producto.image;
+    }
+    const index = Math.abs(producto.id ?? 0) % this.imagenesDefault.length;
+    return this.imagenesDefault[index];
   }
 
-  getCorreo(empleado: Persona): string {
-    return empleado.mail ?? empleado.email ?? empleado.user?.mail ?? empleado.user?.email ?? 'Sin correo';
+  getNombreCategoria(producto: Producto): string {
+    if (producto.categoria?.nombre) {
+      return producto.categoria.nombre;
+    }
+    const cat = this.categorias.find(c => c.id === producto.categoriaId);
+    return cat ? cat.name : 'Sin categoría';
   }
 
-  // Función reutilizable para alertas con SweetAlert2
   alerta(title: string, text: string, icon: SweetAlertIcon = 'info'): void {
     Swal.fire({
       title,
@@ -55,55 +79,77 @@ export class ProductoComponent implements OnInit {
     });
   }
 
-  // Consultar lista de empleados desde el backend
-  getEmpleados(): void {
-    this.personaService.funListar().subscribe({
-      next: (data: Persona[]) => {
-        this.empleados = Array.isArray(data) ? data : [];
+  // Consultar lista de productos desde el backend (/producto/back o /producto)
+  getProductos(): void {
+    this.productoService.funListarPaginado(1, '', '').subscribe({
+      next: (resp: any) => {
+        const lista = Array.isArray(resp) ? resp : (resp?.data ?? []);
+        this.productos = lista;
       },
       error: (error: unknown) => {
-        console.error('Error al cargar empleados:', error);
-        this.alerta('Error', 'No se pudieron cargar los empleados desde el servidor.', 'error');
+        console.error('Error al cargar productos:', error);
+        this.alerta('Error', 'No se pudieron cargar los productos desde el servidor.', 'error');
       }
     });
   }
 
-  // Abrir formulario modal para registrar un nuevo empleado
+  // Filtrar productos por categoría desde el dropdown
+  filtrarPorCategoria(): void {
+    if (!this.categoriaSeleccionada) {
+      this.getProductos();
+      return;
+    }
+    this.productoService.funListar().subscribe({
+      next: (data: Producto[]) => {
+        this.productos = data.filter(p => p.categoriaId === this.categoriaSeleccionada.id);
+      }
+    });
+  }
+
+  // Abrir modal para nuevo producto / equipo
   openNew(): void {
-    this.empleado_id = -1;
-    this.empleadoForm.reset({
-      nombres: '',
-      apellidos: '',
-      mail: ''
+    this.producto_id = -1;
+    this.productoForm.reset({
+      nombre: '',
+      precio: null,
+      stock: 0,
+      categoriaId: null,
+      descripcion: '',
+      image: '',
+      estado: true
     });
-    this.empleadoDialog = true;
+    this.productoDialog = true;
   }
 
-  // Cerrar diálogo modal
+  // Cerrar modal
   hideDialog(): void {
-    this.empleadoDialog = false;
-    this.empleado_id = -1;
-    this.empleadoForm.reset();
+    this.productoDialog = false;
+    this.producto_id = -1;
+    this.productoForm.reset();
   }
 
-  // Cargar datos del empleado seleccionado en el formulario para editar
-  editEmpleado(empleado: Persona): void {
-    this.empleado_id = empleado.id ?? -1;
-    this.empleadoForm.setValue({
-      nombres: empleado.nombres ?? '',
-      apellidos: empleado.apellidos ?? '',
-      mail: empleado.mail ?? empleado.email ?? empleado.user?.mail ?? empleado.user?.email ?? ''
+  // Cargar datos del producto para editar
+  editProducto(producto: Producto): void {
+    this.producto_id = producto.id ?? -1;
+    this.productoForm.patchValue({
+      nombre: producto.nombre ?? '',
+      precio: Number(producto.precio ?? 0),
+      stock: producto.stock ?? 0,
+      categoriaId: producto.categoriaId ?? producto.categoria?.id ?? null,
+      descripcion: producto.descripcion ?? '',
+      image: producto.image ?? '',
+      estado: producto.estado ?? true
     });
-    this.empleadoDialog = true;
+    this.productoDialog = true;
   }
 
-  // Eliminar empleado con confirmación SweetAlert2
-  deleteEmpleado(empleado: Persona): void {
-    if (!empleado.id) return;
+  // Eliminar producto con confirmación
+  deleteProducto(producto: Producto): void {
+    if (!producto.id) return;
 
     Swal.fire({
-      title: '¿Está seguro de eliminar el empleado?',
-      text: `Se eliminará a ${empleado.nombres} ${empleado.apellidos}. ¡Esta acción no se puede deshacer!`,
+      title: '¿Está seguro de eliminar este producto?',
+      text: `Se eliminará "${producto.nombre}" del inventario. ¡Esta acción no se puede deshacer!`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -112,71 +158,71 @@ export class ProductoComponent implements OnInit {
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        this.personaService.funEliminar(empleado.id!).subscribe({
+        this.productoService.funEliminar(producto.id!).subscribe({
           next: () => {
-            this.alerta('¡Eliminado!', 'Empleado eliminado correctamente.', 'success');
-            this.getEmpleados();
-            this.empleado_id = -1;
+            this.alerta('¡Eliminado!', 'Producto eliminado del inventario.', 'success');
+            this.getProductos();
+            this.producto_id = -1;
           },
           error: (error: unknown) => {
-            console.error('Error al eliminar empleado:', error);
-            this.alerta('Error', 'No se pudo eliminar el empleado.', 'error');
+            console.error('Error al eliminar producto:', error);
+            this.alerta('Error', 'No se pudo eliminar el producto.', 'error');
           }
         });
       }
     });
   }
 
-  // Registrar o actualizar empleado
-  guardarEmpleado(): void {
-    if (this.empleadoForm.invalid) {
-      this.empleadoForm.markAllAsTouched();
-      this.alerta('Formulario incompleto', 'Por favor complete todos los campos requeridos.', 'warning');
+  // Guardar o actualizar producto
+  guardarProducto(): void {
+    if (this.productoForm.invalid) {
+      this.productoForm.markAllAsTouched();
+      this.alerta('Formulario incompleto', 'Por favor complete los campos obligatorios del producto.', 'warning');
       return;
     }
 
-    const formValues = this.empleadoForm.value;
-    const mail = formValues.mail?.trim() ?? '';
-    const datosEmpleado: Partial<Persona> = {
-      nombres: formValues.nombres?.trim() ?? '',
-      apellidos: formValues.apellidos?.trim() ?? '',
-      mail
+    const formValues = this.productoForm.value;
+    const datosProducto: Partial<Producto> = {
+      nombre: formValues.nombre?.trim() ?? '',
+      precio: Number(formValues.precio ?? 0),
+      stock: Number(formValues.stock ?? 0),
+      categoriaId: Number(formValues.categoriaId),
+      descripcion: formValues.descripcion?.trim() ?? '',
+      image: formValues.image?.trim() ?? '',
+      estado: formValues.estado ?? true
     };
 
-    if (this.empleado_id > 0) {
-      // Modificar empleado existente
-      this.personaService.funModificar(this.empleado_id, datosEmpleado).subscribe({
+    if (this.producto_id > 0) {
+      this.productoService.funModificar(this.producto_id, datosProducto).subscribe({
         next: () => {
-          this.empleadoDialog = false;
-          this.empleadoForm.reset();
-          this.empleado_id = -1;
-          this.getEmpleados();
-          this.alerta('¡Actualizado!', 'Datos del empleado modificados con éxito.', 'success');
+          this.productoDialog = false;
+          this.productoForm.reset();
+          this.producto_id = -1;
+          this.getProductos();
+          this.alerta('¡Actualizado!', 'Producto modificado con éxito.', 'success');
         },
         error: (error: unknown) => {
-          console.error('Error al modificar empleado:', error);
-          this.alerta('Error', 'No se pudieron actualizar los datos del empleado.', 'error');
+          console.error('Error al modificar producto:', error);
+          this.alerta('Error', 'No se pudieron actualizar los datos del producto.', 'error');
         }
       });
     } else {
-      // Registrar nuevo empleado
-      this.personaService.funGuardar(datosEmpleado).subscribe({
+      this.productoService.funGuardar(datosProducto).subscribe({
         next: () => {
-          this.empleadoDialog = false;
-          this.empleadoForm.reset();
-          this.empleado_id = -1;
-          this.getEmpleados();
-          this.alerta('¡Registrado!', 'Empleado registrado exitosamente.', 'success');
+          this.productoDialog = false;
+          this.productoForm.reset();
+          this.producto_id = -1;
+          this.getProductos();
+          this.alerta('¡Registrado!', 'Producto agregado al inventario exitosamente.', 'success');
         },
         error: (error: unknown) => {
-          console.error('Error al registrar empleado:', error);
-          this.alerta('Error', 'No se pudo registrar el nuevo empleado.', 'error');
+          console.error('Error al registrar producto:', error);
+          this.alerta('Error', 'No se pudo registrar el producto.', 'error');
         }
       });
     }
   }
 
-  // Filtro global para la tabla
   onGlobalFilter(table: Table, event: Event): void {
     table.filterGlobal((event.target as HTMLInputElement).value, 'contains');
   }
